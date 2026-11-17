@@ -36,7 +36,7 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      title: 'Rick & Morty Explorer',
+      title: 'SpaceNews Explorer',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       // Agar Snackbar bisa dipanggil dari controller (lihat utils/snack.dart).

@@ -7,9 +7,10 @@ import '../modules/auth/login_view.dart';
 import '../modules/auth/register_view.dart';
 import '../modules/detail/detail_controller.dart';
 import '../modules/detail/detail_view.dart';
-import '../modules/episode/episode_controller.dart';
+import '../modules/favorite/favorite_controller.dart';
+import '../modules/favorite/favorite_view.dart';
 import '../modules/home/home_controller.dart';
-import '../modules/main/main_view.dart';
+import '../modules/home/home_view.dart';
 import 'app_routes.dart';
 
 /// Halaman utama hanya bisa dibuka setelah login.
@@ -17,8 +18,8 @@ class AuthGuard extends GetMiddleware {
   @override
   RouteSettings? redirect(String? route) =>
       Get.find<SessionService>().isLoggedIn
-      ? null
-      : const RouteSettings(name: Routes.login);
+          ? null
+          : const RouteSettings(name: Routes.login);
 }
 
 /// Pengguna yang sudah login tidak perlu melihat halaman login lagi.
@@ -26,13 +27,13 @@ class GuestGuard extends GetMiddleware {
   @override
   RouteSettings? redirect(String? route) =>
       Get.find<SessionService>().isLoggedIn
-      ? const RouteSettings(name: Routes.main)
-      : null;
+          ? const RouteSettings(name: Routes.home)
+          : null;
 }
 
 class AppPages {
   static String get initial =>
-      Get.find<SessionService>().isLoggedIn ? Routes.main : Routes.login;
+      Get.find<SessionService>().isLoggedIn ? Routes.home : Routes.login;
 
   static final pages = <GetPage>[
     GetPage(
@@ -48,14 +49,13 @@ class AppPages {
       binding: BindingsBuilder(() => Get.lazyPut(() => AuthController())),
     ),
     GetPage(
-      name: Routes.main,
-      page: () => const MainView(),
+      name: Routes.home,
+      page: () => const HomeView(),
       middlewares: [AuthGuard()],
       binding: BindingsBuilder(() {
-        Get.lazyPut(() => MainController());
-        Get.lazyPut(() => AuthController());
         Get.lazyPut(() => HomeController());
-        // Get.lazyPut(() => EpisodeController());
+        Get.lazyPut(() => AuthController());
+        Get.lazyPut(() => FavoriteController());
       }),
     ),
     GetPage(
@@ -63,6 +63,12 @@ class AppPages {
       page: () => const DetailView(),
       middlewares: [AuthGuard()],
       binding: BindingsBuilder(() => Get.lazyPut(() => DetailController())),
+    ),
+    GetPage(
+      name: Routes.bookmark,
+      page: () => const FavoriteView(),
+      middlewares: [AuthGuard()],
+      binding: BindingsBuilder(() => Get.lazyPut(() => FavoriteController())),
     ),
   ];
 }

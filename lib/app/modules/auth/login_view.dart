@@ -44,8 +44,8 @@ class _LoginViewState extends State<LoginView> {
   @override
   Widget build(BuildContext context) {
     return AuthScaffold(
-      title: 'Rick & Morty\nExplorer',
-      subtitle: 'Masuk untuk menjelajahi multiverse',
+      title: 'SpaceNews\nExplorer',
+      subtitle: 'Masuk untuk menjelajahi berita luar angkasa',
       child: Form(
         key: _formKey,
         child: Column(
