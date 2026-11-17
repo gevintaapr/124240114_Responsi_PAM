@@ -46,7 +46,7 @@ class AuthScaffold extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const Center(
-                    child: GradientIcon(icon: Icons.blur_on_rounded, size: 68),
+                    child: GradientIcon(icon: Icons.rocket_launch, size: 68),
                   ),
                   const SizedBox(height: 18),
                   Text(

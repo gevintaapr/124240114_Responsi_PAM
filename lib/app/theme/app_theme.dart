@@ -51,7 +51,7 @@ class AppGradients {
     colors: [AppColors.pink, AppColors.purple],
   );
 
-  /// Gradasi aksen hangat: badge episode, sorotan kecil.
+  /// Gradasi aksen hangat: sorotan kecil.
   static const warm = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
