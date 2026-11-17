@@ -118,28 +118,29 @@ class HomeView extends GetView<HomeController> {
             ),
           ),
 
-          // Fitur Filter Berita berdasarkan Sumber Berita (news site)
+          // Fitur Filter 
           SizedBox(
             height: 44,
-            child: Obx(
-              () => ListView.separated(
+            child: Obx(() {
+              final selected = controller.selectedSite.value;
+              return ListView(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: HomeController.newsSiteFilters.length,
-                separatorBuilder: (_, _) => const SizedBox(width: 8),
-                itemBuilder: (_, index) {
-                  final site = HomeController.newsSiteFilters[index];
-                  final isSelected = controller.selectedSite.value == site;
-                  return Center(
-                    child: _FilterChip(
-                      label: site,
-                      selected: isSelected,
-                      onTap: () => controller.selectSite(site),
+                children: HomeController.newsSiteFilters.map((site) {
+                  final isSelected = selected == site;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Center(
+                      child: _FilterChip(
+                        label: site,
+                        selected: isSelected,
+                        onTap: () => controller.selectSite(site),
+                      ),
                     ),
                   );
-                },
-              ),
-            ),
+                }).toList(),
+              );
+            }),
           ),
           const SizedBox(height: 8),
 
@@ -225,9 +226,9 @@ class _FilterChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final borderRadius = BorderRadius.circular(999);
-    return Semantics(
-      button: true,
-      selected: selected,
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
@@ -247,22 +248,13 @@ class _FilterChip extends StatelessWidget {
             ),
           ],
         ),
-        child: Material(
-          type: MaterialType.transparency,
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: borderRadius,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 12.5,
-                  color: selected ? Colors.white : AppColors.text,
-                ),
-              ),
-            ),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 12.5,
+            color: selected ? Colors.white : AppColors.text,
           ),
         ),
       ),

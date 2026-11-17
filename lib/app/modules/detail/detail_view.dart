@@ -245,12 +245,11 @@ class _MetaRow extends StatelessWidget {
             fontWeight: FontWeight.w600,
           ),
         ),
-        const Spacer(),
-        Flexible(
-          flex: 2,
+        const SizedBox(width: 12),
+        Expanded(
           child: Text(
             value,
-            textAlign: TextAlign.end,
+            textAlign: TextAlign.right,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(

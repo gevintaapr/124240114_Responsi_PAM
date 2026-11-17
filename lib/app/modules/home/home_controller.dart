@@ -60,8 +60,11 @@ class HomeController extends GetxController {
   }
 
   void selectSite(String site) {
-    if (selectedSite.value == site) return;
-    selectedSite.value = site;
+    if (selectedSite.value == site) {
+      selectedSite.value = 'All';
+    } else {
+      selectedSite.value = site;
+    }
     fetch();
   }
 
