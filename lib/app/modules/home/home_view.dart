@@ -1,107 +1,182 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../data/services/session_service.dart';
+import '../../routes/app_routes.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/character_widgets.dart';
+import '../../widgets/news_widgets.dart';
+import '../../widgets/glass.dart';
 import '../../widgets/state_views.dart';
+import '../auth/auth_controller.dart';
 import 'home_controller.dart';
 
 class HomeView extends GetView<HomeController> {
   const HomeView({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-          child: Obx(
-            () => TextField(
-              key: const Key('search_field'),
-              controller: controller.searchController,
-              // Setiap ketikan mengubah query; controller menunggu 500 ms
-              // (debounce) sebelum memanggil API pencarian.
-              onChanged: (v) => controller.query.value = v,
-              textInputAction: TextInputAction.search,
-              style: const TextStyle(fontSize: 14),
-              decoration: InputDecoration(
-                isDense: true,
-                hintText: 'Cari karakter berdasarkan nama...',
-                prefixIcon: const Icon(Icons.search_rounded, size: 20),
-                suffixIcon: controller.query.value.isEmpty
-                    ? null
-                    : IconButton(
-                        onPressed: controller.clearSearch,
-                        icon: const Icon(Icons.close_rounded, size: 18),
-                      ),
+  void _confirmLogout() {
+    Get.dialog(
+      GlassDialog(
+        icon: Icons.logout_rounded,
+        title: 'Logout',
+        message: 'Yakin ingin keluar dari akun ini?',
+        actions: [
+          OutlinedButton(
+            onPressed: Get.back,
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size.fromHeight(48),
+              foregroundColor: AppColors.text,
+              side: const BorderSide(color: AppColors.glassBorder, width: 1.5),
+              backgroundColor: Colors.white.withValues(alpha: 0.5),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.sm + 4),
               ),
             ),
+            child: const Text('Batal'),
           ),
-        ),
-        SizedBox(
-          height: 52,
-          child: Obx(
-            () => ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: [
-                Center(
-                  child: _FilterChip(
-                    key: const Key('filter_all'),
-                    label: 'All',
-                    selected: controller.isAll,
-                    onTap: controller.clearStatuses,
-                  ),
-                ),
-                for (final entry in HomeController.statusFilters.entries)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 8),
-                    child: Center(
-                      child: _FilterChip(
-                        key: Key('filter_${entry.value}'),
-                        label: entry.key,
-                        dotColor: AppColors.status(entry.value),
-                        selected: controller.selectedStatuses.contains(
-                          entry.value,
-                        ),
-                        // Chip aktif menampilkan × untuk melepas filter.
-                        removable: true,
-                        onTap: () => controller.toggleStatus(entry.value),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+          GradientButton(
+            label: 'Logout',
+            onPressed: () {
+              Get.back();
+              Get.find<AuthController>().logout();
+            },
           ),
-        ),
-        Expanded(child: Obx(_buildBody)),
-      ],
+        ],
+      ),
+      barrierColor: AppColors.text.withValues(alpha: 0.25),
     );
   }
 
-  // Memilih tampilan sesuai state: loading -> error -> kosong -> grid data.
+  @override
+  Widget build(BuildContext context) {
+    final session = Get.find<SessionService>();
+
+    return GlassScaffold(
+      appBar: AppBar(
+        titleSpacing: 20,
+        // Pada title AppBar, tampilkan username pengguna yang sedang login
+        title: Obx(
+          () => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'SpaceNews Explorer',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'Hai, ${session.currentUser.value ?? 'Pengguna'} 👋',
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textMuted,
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          // Button pada bagian kanan AppBar yang mengarah ke halaman Bookmark
+          GlassIconButton(
+            icon: Icons.bookmark_rounded,
+            tooltip: 'Halaman Bookmark',
+            onPressed: () => Get.toNamed(Routes.bookmark),
+          ),
+          const SizedBox(width: 8),
+          // Button logout
+          GlassIconButton(
+            icon: Icons.logout_rounded,
+            tooltip: 'Logout',
+            onPressed: _confirmLogout,
+          ),
+          const SizedBox(width: 16),
+        ],
+      ),
+      body: Column(
+        children: [
+          // Kotak Pencarian
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            child: Obx(
+              () => TextField(
+                controller: controller.searchController,
+                onChanged: (v) => controller.query.value = v,
+                textInputAction: TextInputAction.search,
+                style: const TextStyle(fontSize: 14),
+                decoration: InputDecoration(
+                  isDense: true,
+                  hintText: 'Cari berita eksplorasi antariksa...',
+                  prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                  suffixIcon: controller.query.value.isEmpty
+                      ? null
+                      : IconButton(
+                          onPressed: controller.clearSearch,
+                          icon: const Icon(Icons.close_rounded, size: 18),
+                        ),
+                ),
+              ),
+            ),
+          ),
+
+          // Fitur Filter Berita berdasarkan Sumber Berita (news site)
+          SizedBox(
+            height: 44,
+            child: Obx(
+              () => ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: HomeController.newsSiteFilters.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 8),
+                itemBuilder: (_, index) {
+                  final site = HomeController.newsSiteFilters[index];
+                  final isSelected = controller.selectedSite.value == site;
+                  return Center(
+                    child: _FilterChip(
+                      label: site,
+                      selected: isSelected,
+                      onTap: () => controller.selectSite(site),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          // Konten Berita / Loading Indicator
+          Expanded(child: Obx(_buildBody)),
+        ],
+      ),
+    );
+  }
+
   Widget _buildBody() {
+    // Tampilkan loading indicator ketika data sedang dimuat
     if (controller.isLoading.value) {
-      return const LoadingView(label: 'Memuat karakter...');
+      return const LoadingView(label: 'Memuat berita antariksa...');
     }
+
     final error = controller.errorMessage.value;
     if (error != null) {
       return MessageView(
         icon: Icons.wifi_off_rounded,
-        title: 'Gagal memuat data',
+        title: 'Gagal memuat berita',
         message: error,
         onRetry: controller.fetch,
       );
     }
+
     if (controller.news.isEmpty) {
       return const MessageView(
-        icon: Icons.search_off_rounded,
+        icon: Icons.newspaper_rounded,
         gradient: AppGradients.warm,
         title: 'Berita tidak ditemukan',
-        message: 'Coba kata kunci atau filter status yang lain.',
+        message: 'Coba kata kunci atau filter sumber berita yang lain.',
       );
     }
+
     final showFooter = controller.isLoadingMore.value;
+
     return RefreshIndicator(
       onRefresh: controller.fetch,
       child: CustomScrollView(
@@ -109,22 +184,18 @@ class HomeView extends GetView<HomeController> {
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 2, 16, 0),
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
             sliver: SliverGrid.builder(
               gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                 maxCrossAxisExtent: 220,
                 mainAxisSpacing: 12,
                 crossAxisSpacing: 12,
-                // Tinggi kartu tetap, foto mengisi sisa ruang.
-                mainAxisExtent: 172,
+                mainAxisExtent: 210,
               ),
               itemCount: controller.news.length,
               itemBuilder: (_, index) {
-                final news = controller.news[index];
-                return NewsGridCard(
-                  key: ValueKey(news.id),
-                  news: news,
-                );
+                final item = controller.news[index];
+                return NewsGridCard(key: ValueKey(item.id), news: item);
               },
             ),
           ),
@@ -133,8 +204,7 @@ class HomeView extends GetView<HomeController> {
                 ? const LoadMoreIndicator()
                 : const SizedBox.shrink(),
           ),
-          // Ruang agar kartu terakhir tidak tertutup navbar melayang.
-          const SliverToBoxAdapter(child: SizedBox(height: 100)),
+          const SliverToBoxAdapter(child: SizedBox(height: 24)),
         ],
       ),
     );
@@ -143,19 +213,14 @@ class HomeView extends GetView<HomeController> {
 
 class _FilterChip extends StatelessWidget {
   const _FilterChip({
-    super.key,
     required this.label,
     required this.selected,
     required this.onTap,
-    this.dotColor,
-    this.removable = false,
   });
 
   final String label;
   final bool selected;
   final VoidCallback onTap;
-  final Color? dotColor;
-  final bool removable;
 
   @override
   Widget build(BuildContext context) {
@@ -177,7 +242,7 @@ class _FilterChip extends StatelessWidget {
               color: selected
                   ? AppColors.pink.withValues(alpha: 0.28)
                   : AppColors.shadow,
-              blurRadius: selected ? 12 : 8,
+              blurRadius: selected ? 10 : 6,
               offset: const Offset(0, 3),
             ),
           ],
@@ -188,51 +253,14 @@ class _FilterChip extends StatelessWidget {
             onTap: onTap,
             borderRadius: borderRadius,
             child: Padding(
-              padding: EdgeInsets.fromLTRB(
-                14,
-                7,
-                selected && removable ? 8 : 14,
-                7,
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (dotColor != null) ...[
-                    Container(
-                      width: 7,
-                      height: 7,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: selected ? Colors.white : dotColor,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                  ],
-                  Text(
-                    label,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12.5,
-                      color: selected ? Colors.white : AppColors.text,
-                    ),
-                  ),
-                  if (selected && removable) ...[
-                    const SizedBox(width: 6),
-                    Container(
-                      width: 16,
-                      height: 16,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.3),
-                      ),
-                      child: const Icon(
-                        Icons.close_rounded,
-                        size: 12,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ],
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12.5,
+                  color: selected ? Colors.white : AppColors.text,
+                ),
               ),
             ),
           ),
