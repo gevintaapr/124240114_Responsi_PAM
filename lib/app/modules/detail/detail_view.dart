@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../data/models/news.dart';
 import '../../modules/favorite/favorite_controller.dart';
+import '../../routes/app_routes.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/snack.dart';
 import '../../widgets/news_widgets.dart';
@@ -30,8 +31,7 @@ class DetailView extends GetView<DetailController> {
     }
   }
 
-  PreferredSizeWidget _appBar(News? news) {
-    final favoriteController = Get.find<FavoriteController>();
+  PreferredSizeWidget _appBar() {
     return AppBar(
       automaticallyImplyLeading: false,
       titleSpacing: 16,
@@ -47,18 +47,11 @@ class DetailView extends GetView<DetailController> {
         ],
       ),
       actions: [
-        if (news != null)
-          Obx(() {
-            final isFav = favoriteController.isFavorite(news.id);
-            return GlassIconButton(
-              icon: isFav
-                  ? Icons.bookmark_rounded
-                  : Icons.bookmark_border_rounded,
-              iconColor: isFav ? AppColors.pink : AppColors.text,
-              tooltip: isFav ? 'Hapus Bookmark' : 'Tambah Bookmark',
-              onPressed: () => favoriteController.toggle(news),
-            );
-          }),
+        GlassIconButton(
+          icon: Icons.bookmark_rounded,
+          tooltip: 'Halaman Bookmark',
+          onPressed: () => Get.toNamed(Routes.bookmark),
+        ),
         const SizedBox(width: 16),
       ],
     );
@@ -72,7 +65,7 @@ class DetailView extends GetView<DetailController> {
 
       if (news == null) {
         return GlassScaffold(
-          appBar: _appBar(null),
+          appBar: _appBar(),
           body: error != null
               ? MessageView(
                   icon: Icons.wifi_off_rounded,
@@ -85,7 +78,7 @@ class DetailView extends GetView<DetailController> {
       }
 
       return GlassScaffold(
-        appBar: _appBar(news),
+        appBar: _appBar(),
         body: ListView(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
           children: [
