@@ -6,8 +6,6 @@ import '../../data/providers/api_provider.dart';
 class DetailController extends GetxController {
   final ApiProvider _api = Get.find();
 
-  /// Data awal dari list (langsung tampil), lalu diperbarui dari
-  /// endpoint /character/{id}.
   final news = Rxn<News>();
   final isLoading = false.obs;
   final errorMessage = RxnString();
@@ -17,7 +15,6 @@ class DetailController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    // Data yang dikirim dari Home lewat Get.toNamed(Routes.detail, arguments: character).
     final args = Get.arguments;
     if (args is News) {
       news.value = args;
@@ -29,13 +26,15 @@ class DetailController extends GetxController {
   }
 
   Future<void> fetch() async {
+    if (_id <= 0) return;
     isLoading.value = true;
     errorMessage.value = null;
     try {
-      // GET /articles/{id} untuk data paling baru.
-      news.value = await _api.getNews(_id);
+      news.value = await _api.getNewsDetail(_id);
     } on ApiException catch (e) {
       errorMessage.value = e.message;
+    } catch (_) {
+      errorMessage.value = 'Gagal memuat rincian berita.';
     } finally {
       isLoading.value = false;
     }
